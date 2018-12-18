@@ -3,6 +3,7 @@ package com.test.androiddemo.adapter;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.CheckBox;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 
@@ -111,16 +112,27 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
      */
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
-        ParentViewHolder holder;
+        final ParentViewHolder holder;
         if(convertView == null) {
             convertView = View.inflate(parent.getContext(), R.layout.item_parent, null);
             holder = new ParentViewHolder();
-            holder.mParentName = convertView.findViewById(R.id.tv_name);
+            holder.mParentName = convertView.findViewById(R.id.tv_group_name);
+            holder.mcbGroup = convertView.findViewById(R.id.cb_group);
             convertView.setTag(holder);
         }else {
             holder = (ParentViewHolder) convertView.getTag();
         }
-        holder.mParentName.setText(mData.get(groupPosition).getName());
+        final ExpandBean bean = mData.get(groupPosition);
+        holder.mParentName.setText(bean.getName());
+        holder.mcbGroup.setChecked(bean.isChecked());
+        holder.mcbGroup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bean.setChecked(!bean.isChecked(), true);
+                holder.mcbGroup.setChecked(!bean.isChecked());
+                notifyDataSetInvalidated();
+            }
+        });
         return convertView;
     }
 
@@ -135,17 +147,47 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
      */
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        ChildViewHolder holder;
+        final ChildViewHolder holder;
         if(convertView == null) {
             convertView = View.inflate(parent.getContext(), R.layout.item_child, null);
             holder = new ChildViewHolder();
-            holder.mChildView = convertView.findViewById(R.id.tv_name);
+            holder.mChildView = convertView.findViewById(R.id.tv_child_name);
+            holder.mCbChild = convertView.findViewById(R.id.cb_child);
             convertView.setTag(holder);
         }else {
             holder = (ChildViewHolder) convertView.getTag();
         }
+        ExpandBean parentBean = mData.get(groupPosition);
+        final ExpandBean.ExpandChildBean childBean = parentBean.getChilds().get(childPosition);
+        if(parentBean.isChecked()) {
+            holder.mCbChild.setChecked(true);
+        }else {
+            holder.mCbChild.setChecked(childBean.isChecked());
+        }
 
-        holder.mChildView.setText(mData.get(groupPosition).getChilds().get(childPosition).getName());
+        holder.mChildView.setText(childBean.getName());
+        holder.mCbChild.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                childBean.setChecked(!childBean.isChecked());
+                holder.mCbChild.setChecked(!childBean.isChecked());
+            }
+        });
+        parentBean.setOnGroupCheckedChangeListener(new ExpandBean.OnGroupCheckedChangeListener() {
+            @Override
+            public void onGroupCheckedChanged(boolean isChecked, boolean isClick) {
+                if(isClick) {
+                    holder.mCbChild.setChecked(isChecked);
+                    childBean.setChecked(isChecked);
+                }else {
+                    if(isChecked) {
+                        holder.mCbChild.setChecked(true);
+                        childBean.setChecked(true);
+                    }
+                }
+
+            }
+        });
         return convertView;
     }
 
@@ -176,14 +218,17 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
     @Override
     public void configureHeader(View header, int groupPosition, int childPosition, int alpha) {
         String groupData = ((ExpandBean)getGroup(groupPosition)).getName();//悬浮条的显示信息
-        ((TextView) header.findViewById(R.id.tv_msg_listview_label)).setText(groupData);
+        TextView tvName = header.findViewById(R.id.tv_header_name);
+        tvName.setText(groupData);
     }
 
     public class ParentViewHolder {
         public TextView mParentName;
+        CheckBox mcbGroup;
     }
 
     public class ChildViewHolder {
         public TextView mChildView;
+        CheckBox mCbChild;
     }
 }

@@ -14,7 +14,10 @@ import java.util.List;
  */
 public class ExpandBean {
     private String name;
+    private boolean checked;
+    private boolean isClick;
     private List<ExpandChildBean> childs;
+    private OnGroupCheckedChangeListener mListener;
 
     public String getName() {
         return name;
@@ -22,6 +25,22 @@ public class ExpandBean {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked, boolean isClick){
+        this.isClick = isClick;
+        setChecked(checked);
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+        if(mListener != null) {
+            mListener.onGroupCheckedChanged(checked, isClick);
+        }
     }
 
     public List<ExpandChildBean> getChilds() {
@@ -34,6 +53,7 @@ public class ExpandBean {
 
     public static class ExpandChildBean {
         private String name;
+        private boolean checked;
 
         public String getName() {
             return name;
@@ -41,6 +61,14 @@ public class ExpandBean {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public boolean isChecked() {
+            return checked;
+        }
+
+        public void setChecked(boolean checked) {
+            this.checked = checked;
         }
     }
 
@@ -67,4 +95,13 @@ public class ExpandBean {
         }
         return list;
     }
+
+    public void setOnGroupCheckedChangeListener(OnGroupCheckedChangeListener listener){
+        this.mListener = listener;
+    }
+
+    public interface OnGroupCheckedChangeListener{
+        void onGroupCheckedChanged(boolean isChecked, boolean isClick);
+    }
+
 }

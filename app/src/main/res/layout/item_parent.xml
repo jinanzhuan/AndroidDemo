@@ -1,17 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="horizontal"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:gravity="center_vertical"
               android:layoutDirection="ltr"
+              android:background="#fff"
               android:minHeight="50dp">
 
+    <CheckBox
+        android:id="@+id/cb_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:button="@null"
+        android:layout_marginLeft="20dp"
+        android:focusable="false"
+        android:background="@drawable/selector_checkbox_2"/>
+
     <TextView
-        android:id="@+id/tv_name"
+        android:id="@+id/tv_group_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="15dp"
-        android:text="name"/>
+        tools:text="name"/>
 
 </LinearLayout>
