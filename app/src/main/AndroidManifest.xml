@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.ExpandableListViewActivity"/>
+        <activity android:name=".activity.TestListViewActivity"/>
     </application>
 
 </manifest>

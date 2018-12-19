@@ -17,10 +17,12 @@ import android.view.View;
  */
 
 public abstract class BaseActivity extends AppCompatActivity {
+    public BaseActivity mContext;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = this;
         initIntent();
         if(initState()) {
             return;

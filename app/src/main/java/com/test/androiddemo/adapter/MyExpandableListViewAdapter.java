@@ -9,8 +9,9 @@ import android.widget.TextView;
 
 import com.test.androiddemo.R;
 import com.test.androiddemo.bean.ExpandBean;
-import com.test.androiddemo.view.LevitateHeaderExpandListView;
+import com.test.androiddemo.view.PinnedHeaderExpandableListView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -23,13 +24,32 @@ import java.util.List;
  *     modify :
  * </pre>
  */
-public class MyExpandableListViewAdapter extends BaseExpandableListAdapter implements LevitateHeaderExpandListView.HeaderAdapter {
+public class MyExpandableListViewAdapter extends BaseExpandableListAdapter implements PinnedHeaderExpandableListView.HeaderAdapter {
     private List<ExpandBean> mData;
     ExpandableListView listView;
+    private List<String> selectedList;
+    private OnGroupSelectedListener listener;
 
     public MyExpandableListViewAdapter(ExpandableListView listView, List<ExpandBean> data) {
         mData = data;
         this.listView = listView;
+        initSelectedList();
+    }
+
+    private void initSelectedList() {
+        if(selectedList == null) {
+            selectedList = new ArrayList<>();
+        }
+        if(mData != null && !mData.isEmpty()) {
+            for(int i = 0; i < mData.size(); i++) {
+                if(mData.get(i).isChecked() && !selectedList.contains(mData.get(i).getHuid())) {
+                    selectedList.add(mData.get(i).getHuid());
+                }
+            }
+        }
+        if(this.listener != null) {
+            listener.onGroupSelect(selectedList.size() == mData.size());
+        }
     }
 
     /**
@@ -123,17 +143,50 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
             holder = (ParentViewHolder) convertView.getTag();
         }
         final ExpandBean bean = mData.get(groupPosition);
-        holder.mParentName.setText(bean.getName());
         holder.mcbGroup.setChecked(bean.isChecked());
+        int childSelectedSize = bean.getChildSelectedSize();
+        if(childSelectedSize == 0) {
+            holder.mParentName.setText(bean.getName());
+        }else {
+            holder.mParentName.setText(bean.getName()+"\u0020("+childSelectedSize+")");
+        }
         holder.mcbGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                bean.setChecked(!bean.isChecked(), true);
-                holder.mcbGroup.setChecked(!bean.isChecked());
-                notifyDataSetInvalidated();
+                boolean checked = bean.isChecked();
+                bean.setChecked(!checked, true);
+                refreshSelectedList(bean.getHuid(), !checked);
+                holder.mcbGroup.setChecked(!checked);
+                notifyDataSetChanged();
+            }
+        });
+        bean.setOnGroupCheckedChangeListener(new ExpandBean.OnGroupCheckedChangeListener() {
+            @Override
+            public void onGroupCheckedChange(boolean isChecked, int size) {
+                holder.mcbGroup.setChecked(isChecked);
+                if(size == 0) {
+                    holder.mParentName.setText(bean.getName());
+                }else {
+                    holder.mParentName.setText(bean.getName()+"\u0020("+size+")");
+                }
             }
         });
         return convertView;
+    }
+
+    private void refreshSelectedList(String huid, boolean checked) {
+        if(checked) {
+            if(!selectedList.contains(huid)) {
+                selectedList.add(huid);
+            }
+        }else {
+            if(selectedList.contains(huid)) {
+                selectedList.remove(huid);
+            }
+        }
+        if(listener != null) {
+            listener.onGroupSelect(selectedList.size() == mData.size());
+        }
     }
 
     /**
@@ -157,9 +210,10 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
         }else {
             holder = (ChildViewHolder) convertView.getTag();
         }
-        ExpandBean parentBean = mData.get(groupPosition);
+        final ExpandBean parentBean = mData.get(groupPosition);
         final ExpandBean.ExpandChildBean childBean = parentBean.getChilds().get(childPosition);
         if(parentBean.isChecked()) {
+            childBean.setChecked(true);
             holder.mCbChild.setChecked(true);
         }else {
             holder.mCbChild.setChecked(childBean.isChecked());
@@ -169,23 +223,10 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
         holder.mCbChild.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                childBean.setChecked(!childBean.isChecked());
-                holder.mCbChild.setChecked(!childBean.isChecked());
-            }
-        });
-        parentBean.setOnGroupCheckedChangeListener(new ExpandBean.OnGroupCheckedChangeListener() {
-            @Override
-            public void onGroupCheckedChanged(boolean isChecked, boolean isClick) {
-                if(isClick) {
-                    holder.mCbChild.setChecked(isChecked);
-                    childBean.setChecked(isChecked);
-                }else {
-                    if(isChecked) {
-                        holder.mCbChild.setChecked(true);
-                        childBean.setChecked(true);
-                    }
-                }
-
+                boolean checked = childBean.isChecked();
+                childBean.setChecked(!checked);
+                holder.mCbChild.setChecked(!checked);
+                parentBean.setSingleChildChecked(childBean.getHuid(), !checked);
             }
         });
         return convertView;
@@ -202,13 +243,22 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
         return true;
     }
 
+
+    public void setAllChecked(boolean checked) {
+        if(mData != null && !mData.isEmpty()) {
+            for(int i = 0; i < mData.size(); i++) {
+                mData.get(i).setChecked(checked, true);
+            }
+            notifyDataSetChanged();
+        }
+    }
+
     @Override
     public int getHeaderState(int groupPosition, int childPosition) {
         int childCount = getChildrenCount(groupPosition);
         if (childPosition == childCount - 1) {
             return PINNED_HEADER_PUSHED_UP;
-        } else if (childPosition == -1
-                && !listView.isGroupExpanded(groupPosition)) {
+        } else if (childPosition == -1 && !listView.isGroupExpanded(groupPosition)) {
             return PINNED_HEADER_GONE;
         } else {
             return PINNED_HEADER_VISIBLE;
@@ -217,18 +267,74 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
 
     @Override
     public void configureHeader(View header, int groupPosition, int childPosition, int alpha) {
-        String groupData = ((ExpandBean)getGroup(groupPosition)).getName();//悬浮条的显示信息
-        TextView tvName = header.findViewById(R.id.tv_header_name);
-        tvName.setText(groupData);
+        ParentViewHolder holder = (ParentViewHolder) header.getTag();
+        if(holder == null) {
+            holder = new ParentViewHolder();
+            holder.mcbGroup = header.findViewById(R.id.cb_group);
+            holder.mParentName = header.findViewById(R.id.tv_group_name);
+        }
+        final ExpandBean bean = mData.get(groupPosition);
+        holder.mcbGroup.setChecked(bean.isChecked());
+        int childSelectedSize = bean.getChildSelectedSize();
+        if(childSelectedSize == 0) {
+            holder.mParentName.setText(bean.getName());
+        }else {
+            holder.mParentName.setText(bean.getName()+"\u0020("+childSelectedSize+")");
+        }
+        final ParentViewHolder finalHolder = holder;
+        holder.mcbGroup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean checked = bean.isChecked();
+                bean.setChecked(!checked, true);
+                refreshSelectedList(bean.getHuid(), !checked);
+                finalHolder.mcbGroup.setChecked(!checked);
+                notifyDataSetChanged();
+            }
+        });
+        final ParentViewHolder finalHolder1 = holder;
+        bean.setOnGroupCheckedChangeListener(new ExpandBean.OnGroupCheckedChangeListener() {
+            @Override
+            public void onGroupCheckedChange(boolean isChecked, int size) {
+                finalHolder1.mcbGroup.setChecked(isChecked);
+                if(size == 0) {
+                    finalHolder1.mParentName.setText(bean.getName());
+                }else {
+                    finalHolder1.mParentName.setText(bean.getName()+"\u0020("+size+")");
+                }
+            }
+        });
+    }
+
+    @Override
+    public void setGroupClickStatus(int groupPosition, int status) {
+
+    }
+
+    @Override
+    public int getGroupClickStatus(int groupPosition) {
+        return 0;
     }
 
     public class ParentViewHolder {
-        public TextView mParentName;
+        TextView mParentName;
         CheckBox mcbGroup;
     }
 
     public class ChildViewHolder {
-        public TextView mChildView;
+        TextView mChildView;
         CheckBox mCbChild;
+    }
+
+    public void setOnGroupSelectedListener(OnGroupSelectedListener listener){
+        this.listener = listener;
+    }
+
+    public interface OnGroupSelectedListener {
+        /**
+         * 是否全部选中
+         * @param isAllSelected
+         */
+        void onGroupSelect(boolean isAllSelected);
     }
 }

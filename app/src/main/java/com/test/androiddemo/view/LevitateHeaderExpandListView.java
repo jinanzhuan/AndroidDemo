@@ -164,10 +164,10 @@ public class LevitateHeaderExpandListView extends ExpandableListView implements 
         }
     }
 
-    @Override
     /**
      * 列表界面更新时调用该方法(如滚动时)
      */
+    @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
         if (mHeaderViewVisible) {
