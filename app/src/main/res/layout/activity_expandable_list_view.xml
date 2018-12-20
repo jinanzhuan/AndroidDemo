@@ -12,6 +12,7 @@
         android:layout_marginBottom="60dp"
         android:dividerHeight="5dp"
         android:layoutDirection="rtl"
+        android:scrollbars="none"
         android:background="@android:color/white"/>
 
     <LinearLayout

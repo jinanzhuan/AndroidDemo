@@ -7,6 +7,8 @@ import android.widget.AbsListView;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 
+import com.test.androiddemo.R;
+
 /**
  * <pre>
  *     author : created by ljn
@@ -96,6 +98,7 @@ public class PinnedHeaderExpandableListView extends ExpandableListView implement
 
     public void setHeaderView(View view) {
         mHeaderView = view;
+        mHeaderView.findViewById(R.id.iv_arrow).setVisibility(VISIBLE);
         mHeaderView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {

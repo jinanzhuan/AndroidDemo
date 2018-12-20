@@ -5,6 +5,7 @@ import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckBox;
 import android.widget.ExpandableListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.test.androiddemo.R;
@@ -138,6 +139,7 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
             holder = new ParentViewHolder();
             holder.mParentName = convertView.findViewById(R.id.tv_group_name);
             holder.mcbGroup = convertView.findViewById(R.id.cb_group);
+            holder.rl_group_check = convertView.findViewById(R.id.rl_group_check);
             convertView.setTag(holder);
         }else {
             holder = (ParentViewHolder) convertView.getTag();
@@ -150,7 +152,7 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
         }else {
             holder.mParentName.setText(bean.getName()+"\u0020("+childSelectedSize+")");
         }
-        holder.mcbGroup.setOnClickListener(new View.OnClickListener() {
+        holder.rl_group_check.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 boolean checked = bean.isChecked();
@@ -272,6 +274,7 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
             holder = new ParentViewHolder();
             holder.mcbGroup = header.findViewById(R.id.cb_group);
             holder.mParentName = header.findViewById(R.id.tv_group_name);
+            holder.rl_group_check = header.findViewById(R.id.rl_group_check);
         }
         final ExpandBean bean = mData.get(groupPosition);
         holder.mcbGroup.setChecked(bean.isChecked());
@@ -282,7 +285,7 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
             holder.mParentName.setText(bean.getName()+"\u0020("+childSelectedSize+")");
         }
         final ParentViewHolder finalHolder = holder;
-        holder.mcbGroup.setOnClickListener(new View.OnClickListener() {
+        holder.rl_group_check.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 boolean checked = bean.isChecked();
@@ -317,6 +320,7 @@ public class MyExpandableListViewAdapter extends BaseExpandableListAdapter imple
     }
 
     public class ParentViewHolder {
+        RelativeLayout rl_group_check;
         TextView mParentName;
         CheckBox mcbGroup;
     }
