@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.test.androiddemo.activity.ConferenceActivity;
 import com.test.androiddemo.activity.ExpandableListViewActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -15,6 +16,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void expandableListView(View view) {
-        ExpandableListViewActivity.actionStart(this);
+        ConferenceActivity.start(this);
     }
 }
