@@ -21,8 +21,6 @@ import com.test.androiddemo.ScreenCaptureManager;
 
 public class ConferenceActivity extends AppCompatActivity {
 
-    private Intent service;
-
     public static void start(Context context) {
         Intent starter = new Intent(context, ConferenceActivity.class);
         context.startActivity(starter);
@@ -50,7 +48,7 @@ public class ConferenceActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode == RESULT_OK && requestCode == 1000) {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                service = new Intent(this, CaptureScreenService.class);
+                Intent service = new Intent(this, CaptureScreenService.class);
                 service.putExtra("code", resultCode);
                 service.putExtra("data", data);
                 startForegroundService(service);
@@ -64,10 +62,9 @@ public class ConferenceActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(service != null) {
-            ScreenCaptureManager.getInstance().stop();
-            stopService(service);
-            Log.e("TAG", "stopService");
-        }
+        ScreenCaptureManager.getInstance().stop();
+        Intent service = new Intent(this, CaptureScreenService.class);
+        stopService(service);
+        Log.e("TAG", "stopService");
     }
 }
